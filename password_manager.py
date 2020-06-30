@@ -48,7 +48,7 @@ while True:
     elif type == 'S': 
         break
 
-id_row = None
+row_with_id_number = None
 
 if type == 'C':
     while True:  
@@ -56,21 +56,16 @@ if type == 'C':
         # getpass.getpass() - user input will be hidden
         user_password = getpass('Password: ')
         # checking if username exists in database
-        cur.execute('''
-                    SELECT id 
-                    FROM USER
-                    WHERE login like ?
-                    ''', (username, ) )
+        cur.execute('SELECT id FROM USER WHERE login like ?', (username, ) )
+
         if cur.fetchone() is None:
-            hashedPassword = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
-            cur.execute('''INSERT INTO USER (login, master_password) VALUES (?, ?)''', (username, hashedPassword, ) )
+            hashed_password = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
+            cur.execute('INSERT INTO USER (login, master_password) VALUES (?, ?)', (username, hashed_password, ) )
             conn.commit()
             print('User created')
             
-            cur.execute('''
-                        SELECT id FROM USER where login like ?
-                        ''', (username,))
-            id_row = cur.fetchone()
+            cur.execute('SELECT id FROM USER where login like ? ', (username, ) )
+            row_with_id_number = cur.fetchone()
             print('Congratulations you are logged in!')
             break
         else:
@@ -79,47 +74,45 @@ else:
     while True:
         username = input('username: ')
         # getpass.getpass() - user input will be hidden
+        cur.execute('SELECT master_password FROM USER where login like ?', (username,) )
+        row = cur.fetchone()
+
+        if row is None:
+            print('Username ', username,'doesnt exist\n')
+            continue
+
         user_password = getpass('Password: ')
         
         # checking if username and password are correct
-        hashedPassword = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
+        
 
-        cur.execute('SELECT master_password FROM USER where login like ?', (username,) )
-        hashedpassfromdatabase = cur.fetchone()[0]
-
-        validation = bcrypt.checkpw(user_password.encode(), hashedpassfromdatabase)
+        hashed_pass_from_db = row[0]
+        
+        validation = bcrypt.checkpw(user_password.encode(), hashed_pass_from_db)
 
         if validation:
-            # print('Valid')
             cur.execute('SELECT id FROM USER where login like ?', (username, ) )
-            id_row = cur.fetchone()
+            row_with_id_number = cur.fetchone()
 
-        if id_row is None:
+        if row_with_id_number is None:
             print('The data you have entered are incorrect')
         else:
             print('Congratulations you are logged in!')
             break
 
-user_id = id_row[0]
+current_user_id = row_with_id_number[0]
 # print('User id: ', user_id)
 
 def showData():
-    cur.execute('SELECT website, email, password FROM STORAGE WHERE user_id like ?', (user_id, ) )
-    dataFromUser = cur.fetchall()
+    cur.execute('SELECT website, email, password FROM STORAGE WHERE user_id like ?', (current_user_id, ) )
+    password_data_array = cur.fetchall()
 
-    # print('------------------------------')
-    # print('|  website: ', '|email|', '|PASSWORD|')
-    # for c in dataFromUser:
-    #     print(c[0], c[1], c[2])
-    #     print('------------------------------')
-
-    tablewithdata = tt.to_string(
-        dataFromUser,
+    formatted_table_with_data = tt.to_string(
+        password_data_array,
         header = ['website', 'email', 'password'],
         style = tt.styles.ascii_thin_double
     )
-    print(tablewithdata)
+    print(formatted_table_with_data)
         
-    
-
 showData()
