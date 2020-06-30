@@ -4,8 +4,13 @@
 import sqlite3
 
 # importing getpass - for hiding user input
-import getpass
+from getpass import getpass
 
+# for hashing passwords
+import bcrypt
+
+# tables
+import termtables as tt
 # connection to database 
 conn = sqlite3.connect('password_manager.sqlite')
 
@@ -43,54 +48,78 @@ while True:
     elif type == 'S': 
         break
 
+id_row = None
 
-
-username = input('username: ')
-# getpass.getpass() - user input will be hidden
-user_password = getpass.getpass()
-print('Hidden password:', user_password)
-
-# checking if user exist in database
-cur.execute('''
-SELECT id 
-FROM USER
-WHERE login like ?;
-''', (username, ) )
-
-# getting user id
-# cur.execute('''
-# SELECT id 
-# FROM USER
-# WHERE login like '?'
-# ''', (username) )
-
-row = cur.fetchone()
-if row is None:
-    print('User is not registered in our database')
+if type == 'C':
+    while True:  
+        username = input('username: ')
+        # getpass.getpass() - user input will be hidden
+        user_password = getpass('Password: ')
+        # checking if username exists in database
+        cur.execute('''
+                    SELECT id 
+                    FROM USER
+                    WHERE login like ?
+                    ''', (username, ) )
+        if cur.fetchone() is None:
+            hashedPassword = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
+            cur.execute('''INSERT INTO USER (login, master_password) VALUES (?, ?)''', (username, hashedPassword, ) )
+            conn.commit()
+            print('User created')
+            
+            cur.execute('''
+                        SELECT id FROM USER where login like ?
+                        ''', (username,))
+            id_row = cur.fetchone()
+            print('Congratulations you are logged in!')
+            break
+        else:
+            print('Account with this username exists. ')
 else:
-    print('User is registered in our database')
+    while True:
+        username = input('username: ')
+        # getpass.getpass() - user input will be hidden
+        user_password = getpass('Password: ')
+        
+        # checking if username and password are correct
+        hashedPassword = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
 
-row = cur.fetchone()
-if row is None:
-    cur.execute('''INSERT INTO USER (login, master_password) VALUES (?, ?)''', (username, user_password ) )
+        cur.execute('SELECT master_password FROM USER where login like ?', (username,) )
+        hashedpassfromdatabase = cur.fetchone()[0]
 
-# inserting data to tables
+        validation = bcrypt.checkpw(user_password.encode(), hashedpassfromdatabase)
 
+        if validation:
+            # print('Valid')
+            cur.execute('SELECT id FROM USER where login like ?', (username, ) )
+            id_row = cur.fetchone()
 
+        if id_row is None:
+            print('The data you have entered are incorrect')
+        else:
+            print('Congratulations you are logged in!')
+            break
 
+user_id = id_row[0]
+# print('User id: ', user_id)
 
-# getting user id
-cur.execute('''
-SELECT id 
-FROM USER
-WHERE login like '?'
-''', (username) )
+def showData():
+    cur.execute('SELECT website, email, password FROM STORAGE WHERE user_id like ?', (user_id, ) )
+    dataFromUser = cur.fetchall()
 
+    # print('------------------------------')
+    # print('|  website: ', '|email|', '|PASSWORD|')
+    # for c in dataFromUser:
+    #     print(c[0], c[1], c[2])
+    #     print('------------------------------')
 
+    tablewithdata = tt.to_string(
+        dataFromUser,
+        header = ['website', 'email', 'password'],
+        style = tt.styles.ascii_thin_double
+    )
+    print(tablewithdata)
+        
+    
 
-
-
-#cur.execute('''INSERT INTO STORAGE (website, email, password, user_id))
-
-# commiting the insert
-conn.commit()
+showData()
