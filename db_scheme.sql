@@ -1,0 +1,29 @@
+TABLE USER
+id INTEGER - PRIMARY KEY
+login VARCHAR(30)
+master_password VARCHAR(30)
+
+TABLE STORAGE
+id
+email
+password
+user_id - FOREIGN KEY
+
+SQL
+
+CREATE TABLE IF NOT EXISTS USER
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+    login VARCHAR(64) UNIQUE
+    master_password VARCHAR(64)
+)
+
+CREATE TABLE IF NOT EXISTS STORAGE
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+    website VARCHAR(64)
+    email VARCHAR(64)
+    password VARCHAR(64)
+    user_id
+    FOREIGN KEY(user_id) REFERENCES USER(id)
+)
