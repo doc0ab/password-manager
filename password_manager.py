@@ -9,6 +9,9 @@ from getpass import getpass
 # for hashing passwords
 import bcrypt
 
+# for cleaning screen
+import os
+
 # tables
 import termtables as tt
 
@@ -104,8 +107,8 @@ def removeData():
     except:
         print('Could not remove')
 
-
-
+def clearScreen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 # connection to database 
 conn = sqlite3.connect('password_manager.sqlite')
 
@@ -143,7 +146,7 @@ while True:
     if type == 'C' or type == 'S':
         break
 
-
+clearScreen()
 if type == 'C':
     while True:  
         username = input('\nusername: ')
@@ -151,7 +154,7 @@ if type == 'C':
         user_password = getpass('Password: ')
         # checking if username exists in database
         cur.execute('SELECT id FROM USER WHERE login like ?', (username, ) )
-
+        clearScreen()
         if cur.fetchone() is None:
             hashed_password = hash_password(user_password)
             cur.execute('INSERT INTO USER (login, master_password) VALUES (?, ?)', (username, hashed_password, ) )
@@ -164,22 +167,23 @@ if type == 'C':
             # adding data to current_user object
             current_user = User(row[0], row[1])
 
-
+           
             print('Congratulations you are logged in!')
             break
         else:
             print('Account with this username exists. ')
 else:
     while True:
-        username = input('username: ')
-        # getpass.getpass() - user input will be hidden
+        username = input('Username: ')
+       
         cur.execute('SELECT master_password FROM USER where login like ?', (username,) )
         row = cur.fetchone()
 
         if row is None:
+            clearScreen()
             print('Username ', username,'doesn\'t exist\n')
             continue
-
+        # getpass.getpass() - user input will be hidden
         user_password = getpass('Password: ')
         
         # checking if username and password are correct
@@ -192,34 +196,44 @@ else:
             # adding data to current_user object
             current_user = User(row[0], row[1])
         else:
+            clearScreen()
             print('The data you have entered are incorrect')
             continue
-        
+
+        clearScreen()
         print('Congratulations you are logged in!')
         break
 
         
 while True:
     print('\nWhat you want to do?')
-    key_pressed = input('Press \'A\' for adding data, \'S\' for showing data,\'R\' to remove data or \'M\' to modify, press enter to quit\n').upper()
+    key_pressed = input('Press\n\'A\' for adding data\n\'S\' for showing data\n\'R\' to remove data\n\'M\' to modify\nenter to quit\n').upper()
     
     if key_pressed != 'A' or key_pressed != 'S':
         
         if key_pressed == '':
+            clearScreen()
             print('Goodbye', current_user.username)
             break
         elif key_pressed == 'A':
+            clearScreen()
             addData()
         elif key_pressed == 'S':
+            clearScreen()
             website_url = input("Enter website name or press enter to show all data: ")
             if website_url == '':
+                clearScreen()
                 showData()
             else:
+                clearScreen()
                 showData_from_URL(website_url)
         elif key_pressed == 'R':
+            clearScreen()
             removeData()
         elif key_pressed == 'M':
+            clearScreen()
             modifyData()
         else:
+            clearScreen()
             print('You pressed wrong key. Try Again.\n')
             
