@@ -12,12 +12,38 @@ import bcrypt
 # tables
 import termtables as tt
 
-#functions declaration
+# creating User Class
+class User:
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
+
+
+#functions declaration     
+def hash_password(password):
+    hashed_password = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
+    return hashed_password
+
+
+def password_validation(user_password, hashed_password_from_db):
+    return bcrypt.checkpw(user_password.encode(), hashed_pass_from_db)
+
+
+def addData():
+    website_url = input('Website url: ')
+    website_login = input('Login: ')
+    website_password = getpass('Password: ')
+
+    cur.execute('INSERT INTO STORAGE (website, email, password, user_id) VALUES (?, ?, ?, ?)', (website_url, website_login, website_password, current_user.id) )
+    conn.commit()
+    # print(website_url, website_login, website_password)
+
+
 def showData():
-    print('Show data function')
-    print('User id: ', current_user_id)
+    # print('Show data function')
+    # print('User id: ', current_user.id)
     try:
-        cur.execute('SELECT website, email, password FROM STORAGE WHERE user_id like ?', (current_user_id, ) )
+        cur.execute('SELECT website, email, password FROM STORAGE WHERE user_id like ?', (current_user.id, ) )
         password_data_array = cur.fetchall()
 
         if password_data_array is None:
@@ -32,16 +58,6 @@ def showData():
     except:
         print('No data to display')
         
-      
-def hash_password(password):
-    hashed_password = bcrypt.hashpw(user_password.encode(), bcrypt.gensalt())
-    return hashed_password
-
-
-def password_validation(user_password, hashed_password_from_db):
-    return bcrypt.checkpw(user_password.encode(), hashed_pass_from_db)
-
-
 
 
 # connection to database 
@@ -56,7 +72,7 @@ cur.execute('''
     (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         login VARCHAR(64) UNIQUE,
-        master_password VARCHAR(64)
+        master_password BINARY(60)
     )
 ''')
 
@@ -72,18 +88,19 @@ CREATE TABLE IF NOT EXISTS STORAGE
 )
 ''')
 
+# create current_user var
+current_user = None
 
 # checking if user want to sign-up or sign-in
 while True:
-    type = input('Press \'C\' to create account OR \'S\' to sign-in\n')
+    type = input('Press \'C\' to create account OR \'S\' to sign-in\n').upper()
     if type == 'C' or type == 'S':
         break
 
-row_with_id_number = None
 
 if type == 'C':
     while True:  
-        username = input('username: ')
+        username = input('\nusername: ')
         # getpass.getpass() - user input will be hidden
         user_password = getpass('Password: ')
         # checking if username exists in database
@@ -93,10 +110,15 @@ if type == 'C':
             hashed_password = hash_password(user_password)
             cur.execute('INSERT INTO USER (login, master_password) VALUES (?, ?)', (username, hashed_password, ) )
             conn.commit()
-            print('User created')
+            # print('User created')
             
-            cur.execute('SELECT id FROM USER where login like ? ', (username, ) )
-            row_with_id_number = cur.fetchone()
+            cur.execute('SELECT id, login FROM USER where login like ? ', (username, ) )
+            row = cur.fetchone()
+
+            # adding data to current_user object
+            current_user = User(row[0], row[1])
+
+
             print('Congratulations you are logged in!')
             break
         else:
@@ -109,38 +131,41 @@ else:
         row = cur.fetchone()
 
         if row is None:
-            print('Username ', username,'doesnt exist\n')
+            print('Username ', username,'doesn\'t exist\n')
             continue
 
         user_password = getpass('Password: ')
         
         # checking if username and password are correct
-        # hashed_password = hash_password(user_password)
-        
         hashed_pass_from_db = row[0]
         
         if password_validation(user_password, hashed_pass_from_db):
-            cur.execute('SELECT id FROM USER where login like ?', (username, ) )
-            row_with_id_number = cur.fetchone()
+            cur.execute('SELECT id, login FROM USER where login like ?', (username, ) )
+            row = cur.fetchone()
 
-        if row_with_id_number is None:
-            print('The data you have entered are incorrect')
+            # adding data to current_user object
+            current_user = User(row[0], row[1])
         else:
-            print('Congratulations you are logged in!')
-            break
-
-current_user_id = row_with_id_number[0]
-# print('User id: ', user_id)
-
+            print('The data you have entered are incorrect')
+            continue
+        
+        print('Congratulations you are logged in!')
+        break
 
         
-showData()
+while True:
+    print('\nWhat you want to do?')
+    key_pressed = input('Press \'A\' for adding data or \'S\' for showing data, press enter to quit\n').upper()
+    
 
-def addData():
-    website_url = input('Website url: ')
-    website_login = input('Login: ')
-    website_password = getpass('Password: ')
-
-    print(website_url, website_login, website_password)
-
-addData()
+    if key_pressed != 'A' or key_pressed != 'S':
+        if key_pressed == '':
+            print('Goodbye', current_user.username)
+            break
+        elif key_pressed == 'A':
+            addData()
+        elif key_pressed == 'S':
+            showData()
+        else:
+            print('You pressed wrong key. Try Again.\n')
+            
