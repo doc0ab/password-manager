@@ -1,4 +1,4 @@
-# password-storage-system
+# password-manager
 
 Project in which I am showing what I have learned recently
 - using functions
