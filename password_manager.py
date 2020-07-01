@@ -57,7 +57,24 @@ def showData():
             print(formatted_table_with_data)
     except:
         print('No data to display')
-        
+
+def showData_from_URL(website_url):
+    try:
+        cur.execute('SELECT website, email, password FROM STORAGE WHERE user_id like ? AND website like ?', (current_user.id, website_url) )
+        password_data_array = cur.fetchall()
+
+        if password_data_array is None:
+            print('No data to display')
+        else:
+            formatted_table_with_data = tt.to_string(
+                password_data_array,
+                header = ['website', 'email', 'password'],
+                style = tt.styles.ascii_thin_double
+            )
+            print(formatted_table_with_data)
+    except:
+        print('No data to display')
+
 
 
 # connection to database 
@@ -165,7 +182,11 @@ while True:
         elif key_pressed == 'A':
             addData()
         elif key_pressed == 'S':
-            showData()
+            website_url = input("Enter website name or press enter to show all data: ")
+            if website_url == '':
+                showData()
+            else:
+                showData_from_URL(website_url)
         else:
             print('You pressed wrong key. Try Again.\n')
             
