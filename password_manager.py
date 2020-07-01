@@ -76,6 +76,35 @@ def showData_from_URL(website_url):
         print('No data to display')
 
 
+def modifyData():
+    print('Modyfying data')
+    website_url = input('From which website: ')
+    website_email = input('Email: ')
+    website_password = getpass('New password: ')
+
+    try:
+        print('\nUpdating...')
+        cur.execute('UPDATE STORAGE SET password = ? WHERE website like ? AND email like ? AND user_id like ?', (website_password, website_url, website_email, current_user.id))
+        conn.commit()
+        print('Updated')
+    except:
+        print('Couldn\'t Update')
+
+
+def removeData():
+    print('Removing Data')
+    website_url = input('From which website: ')
+    website_email = input('Email: ')
+
+    try:
+        print('\nRemoving...')
+        cur.execute('DELETE FROM STORAGE where website like ? AND email like ?', (website_url, website_email))
+        conn.commit()
+        print('Removed')
+    except:
+        print('Could not remove')
+
+
 
 # connection to database 
 conn = sqlite3.connect('password_manager.sqlite')
@@ -172,10 +201,10 @@ else:
         
 while True:
     print('\nWhat you want to do?')
-    key_pressed = input('Press \'A\' for adding data or \'S\' for showing data, press enter to quit\n').upper()
+    key_pressed = input('Press \'A\' for adding data, \'S\' for showing data,\'R\' to remove data or \'M\' to modify, press enter to quit\n').upper()
     
-
     if key_pressed != 'A' or key_pressed != 'S':
+        
         if key_pressed == '':
             print('Goodbye', current_user.username)
             break
@@ -187,6 +216,10 @@ while True:
                 showData()
             else:
                 showData_from_URL(website_url)
+        elif key_pressed == 'R':
+            removeData()
+        elif key_pressed == 'M':
+            modifyData()
         else:
             print('You pressed wrong key. Try Again.\n')
             
