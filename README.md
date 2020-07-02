@@ -12,4 +12,4 @@ Project in which I am showing what I have learned recently
 What I have learned from this project
 - Definitely I need to create structure of my project at the beginning, I should have created To-Do-List with task to do, instead of doing things without plan
 
-YouTube: https://youtu.be/H2hW3WOxVeg
+Check my youtube video for more informations: https://youtu.be/H2hW3WOxVeg
